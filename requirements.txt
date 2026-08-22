@@ -7,4 +7,5 @@ langchain-core
 langchain-text-splitters
 langchain-google-genai==4.3.3
 langserve==0.3.3
+sse-starlette
 faiss-cpu
