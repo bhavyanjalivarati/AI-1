@@ -35,7 +35,7 @@ GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GOOGLE_API_KEY:
     raise RuntimeError(
         "GEMINI_API_KEY is not configured. "
-        "Please set your Gemini API key as an environment variable."
+        "Please add GEMINI_API_KEY in Render Environment Variables."
     )
 
 
@@ -596,20 +596,9 @@ IMPORTANT RULES:
 7. When asked for all subjects in a semester, provide ALL subjects
    belonging to that semester in the original order.
 
-8. Professional Electives must remain separated:
+8. Professional Electives must remain separated.
 
-   Professional Elective I
-   Professional Elective II
-   Professional Elective III
-   Professional Elective IV
-   Professional Elective V
-   Professional Elective VI
-
-9. Open Electives must remain separated:
-
-   Open Elective I
-   Open Elective II
-   Open Elective III
+9. Open Electives must remain separated.
 
 10. Never mix Professional Electives and Open Electives.
 
@@ -627,20 +616,13 @@ IMPORTANT RULES:
 
 16. Keep responses clear, structured and student-friendly.
 
-17. If asked:
+17. If asked about a subject code, identify the corresponding subject.
 
-    "What is A6IT13?"
+18. If asked about a semester, return the complete semester list
+    in the correct order.
 
-    identify the corresponding subject from the retrieved curriculum.
-
-18. If asked:
-
-    "What subjects are in 3-1?"
-
-    return the complete 3-1 list in the correct order.
-
-19. If asked about AI-related subjects, mention only subjects that
-    are explicitly present in the curriculum.
+19. If asked about AI-related subjects, mention only subjects explicitly
+    present in the curriculum.
 
 20. If the question is unrelated to the MLRIT IT R22 curriculum,
     politely explain that you specialize in the MLRIT IT R22 curriculum.
@@ -668,7 +650,16 @@ app = FastAPI(
     description=(
         "Agentic RAG API for the MLRIT Information Technology "
         "R22 curriculum using Gemini, LangChain and FAISS."
-    )
+    ),
+
+    # Explicitly enable Swagger UI
+    docs_url="/docs",
+
+    # Explicitly enable ReDoc
+    redoc_url="/redoc",
+
+    # Explicitly enable OpenAPI
+    openapi_url="/openapi.json"
 )
 
 
@@ -679,7 +670,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -696,6 +687,9 @@ def root():
         "message": "MLRIT IT R22 Agentic RAG API is running.",
         "status": "success",
         "docs": "/docs",
+        "redoc": "/redoc",
+        "openapi": "/openapi.json",
+        "health": "/health",
         "rag_endpoint": "/rag"
     }
 
@@ -709,12 +703,13 @@ def health():
 
     return {
         "status": "healthy",
-        "service": "MLRIT IT R22 Agentic RAG"
+        "service": "MLRIT IT R22 Agentic RAG",
+        "rag": "available"
     }
 
 
 # ============================================================
-# 18. LANGSERVE ROUTE
+# 18. LANGSERVE RAG ROUTE
 # ============================================================
 
 add_routes(
@@ -732,9 +727,10 @@ if __name__ == "__main__":
 
     import uvicorn
 
+    port = int(os.getenv("PORT", "8000"))
+
     uvicorn.run(
-        "app:app",
+        app,
         host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=False
+        port=port
     )
